@@ -1,5 +1,5 @@
 # Container image that runs your code
-FROM debian:bullseye
+FROM cgr.dev/chainguard/python:latest
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
 COPY entrypoint.py /entrypoint.py
