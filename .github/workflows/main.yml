@@ -10,3 +10,6 @@ jobs:
       - name: Say 'Hello' with Chainguard
         uses: ./hello-world-docker-action # Uses an action in the root directory
         id: hello
+      - name: Aqua Security Trivy
+        uses: aquasecurity/trivy-action@0.32.0
+          
