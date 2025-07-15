@@ -7,6 +7,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Say Hello
+      - name: Say 'Hello' with Chainguard
         uses: ./hello-world-docker-action # Uses an action in the root directory
         id: hello
