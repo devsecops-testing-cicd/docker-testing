@@ -10,7 +10,7 @@
 # ENTRYPOINT ["python3", "/entrypoint.py"]
 # EXPOSE 80
 
-FROM cgr.dev/chainguard/php:latest
+FROM cgr.dev/chainguard/php
 WORKDIR /app
 COPY --from=builder index.php /app/index.php
 
