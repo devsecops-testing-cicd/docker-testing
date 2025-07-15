@@ -3,13 +3,40 @@ on: [push]
 jobs:
   hello_world_job:
     runs-on: ubuntu-latest
-    name: Run Python Script
+
+    permissions:               # ← allow results to reach the Security tab
+      security-events: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Say 'Hello' with Chainguard
-        uses: ./hello-world-docker-action # Uses an action in the root directory
-        id: hello
-      - name: Aqua Security Trivy
-        uses: aquasecurity/trivy-action@0.32.0
-          
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # ---------- 1. Build & tag the action image ----------
+    - name: Build action image
+      run: |
+        docker build \
+          -t ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }} \
+          ./hello-world-docker-action
+
+    # ---------- 2. Scan that image with Trivy ----------
+    - name: Trivy vulnerability scan
+      uses: aquasecurity/trivy-action@0.32.0   # latest as of 15 Jul 2025 :contentReference[oaicite:0]{index=0}
+      with:
+        scan-type: 'image'                     # required input :contentReference[oaicite:1]{index=1}
+        image-ref: ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }}
+        format: 'table'                        # nice console output; switch to sarif for code‑scanning
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'              # fail only on serious vulns
+        exit-code: '1'                         # make the job fail if above severities are found
+        ignore-unfixed: true                   # don’t fail on issues without a published patch
+
+    # ---------- 3. (Optional) Upload a SARIF report to Security tab ----------
+    # - name: Upload Trivy results
+    #   if: always()                            # still upload even if step above fails
+    #   uses: github/codeql-action/upload-sarif@v3
+    #   with:
+    #     sarif_file: trivy-results.sarif
+
+    # ---------- 4. Run your action normally ----------
+    - name: Say "Hello" with Chainguard
+      uses: ./hello-world-docker-action
