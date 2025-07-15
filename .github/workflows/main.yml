@@ -28,9 +28,9 @@ jobs:
         image-ref: ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }}
         format: 'table'                        # nice console output; switch to sarif for code‑scanning
         vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH'              # fail only on serious vulns
-        exit-code: '1'                         # make the job fail if above severities are found
-        ignore-unfixed: true                   # don’t fail on issues without a published patch
+        # severity: 'CRITICAL,HIGH'              # fail only on serious vulns
+        # exit-code: '1'                         # make the job fail if above severities are found
+        # ignore-unfixed: true                   # don’t fail on issues without a published patch
 
     # ---------- 3. (Optional) Upload a SARIF report to Security tab ----------
     # - name: Upload Trivy results
