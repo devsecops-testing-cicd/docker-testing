@@ -10,9 +10,9 @@
 # ENTRYPOINT ["python3", "/entrypoint.py"]
 # EXPOSE 80
 
-FROM cgr.dev/chainguard/php
+FROM cgr.dev/chainguard/php:latest
 WORKDIR /app
-COPY --from=builder index.php /app/index.php
+COPY index.php /app/index.php
 
 # run PHP’s built‑in web‑server on an unprivileged port
 EXPOSE 8080
