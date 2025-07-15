@@ -3,10 +3,10 @@ on: [push]
 jobs:
   hello_world_job:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: Run Python Script
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Hello world action step
+      - name: Say Hello
         uses: ./hello-world-docker-action # Uses an action in the root directory
         id: hello
