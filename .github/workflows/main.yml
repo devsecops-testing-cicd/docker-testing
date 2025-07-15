@@ -37,9 +37,8 @@ jobs:
       uses: zaproxy/action-baseline@v0.10.0
       with:
         target: 'http://localhost:8080'
-        # optional extras:
-        # cmd_options: '-a -T 1200'   # active scan, 20‑min timeout
-        # fail_action: true           # make workflow fail on alerts ≥ “Medium”
+        cmd_options: '-a -T 1200'
+        fail_action: false 
 
     # ---------------- 4. SCA / SAST / etc. (e.g. Trivy) ----------
     - name: Trivy vulnerability scan
