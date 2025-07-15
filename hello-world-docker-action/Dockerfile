@@ -2,7 +2,7 @@
 FROM php:8.3-apache
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
-COPY entrypoint.php /var/www/html/entrypoint.php
+COPY index.php /var/www/html/index.php
 # RUN apt update -y && apt install python3 -y
 #RUN chmod +x /entrypoint.py
 
