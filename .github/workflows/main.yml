@@ -1,41 +1,56 @@
 on: [push]
 
 jobs:
-  hello_world_job:
+  security_tests:
     runs-on: ubuntu-latest
 
-    permissions:               # ← allow results to reach the Security tab
-      security-events: write
+    permissions:
+      security-events: write       # for Trivy SARIF or ZAP reports, if you upload them
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    # ---------------- 0. Checkout source ----------------
+    - uses: actions/checkout@v4
 
-    # ---------- 1. Build & tag the action image ----------
-    - name: Build action image
+    # ---------------- 1. Build your web‑app image ----------------
+    - name: Build web image
       run: |
-        docker build \
-          -t ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }} \
+        docker build -t ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }} \
           ./hello-world-docker-action
-    - name: Say "Hello" with Chainguard
-      uses: ./hello-world-docker-action
 
-    # ---------- 2. Scan that image with Trivy ----------
-    - name: Trivy vulnerability scan
-      uses: aquasecurity/trivy-action@0.32.0   # latest as of 15 Jul 2025 :contentReference[oaicite:0]{index=0}
+    # ---------------- 2. Start the container *detached* -----------
+    - name: Run web app (background)
+      run: |
+        docker run -d --rm --name web \
+          -p 8080:80 \                     # expose it on localhost:8080
+          ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }}
+
+    # optional: give the server a moment to come up or poll it
+    - name: Wait until server is ready
+      run: |
+        for i in {1..30}; do
+          curl -sSf http://localhost:8080 >/dev/null && break
+          sleep 2
+        done
+
+    # ---------------- 3. Dynamic scan with ZAP --------------------
+    - name: ZAP baseline DAST
+      uses: zaproxy/action-baseline@v0.10.0
       with:
-        scan-type: 'image'                     # required input :contentReference[oaicite:1]{index=1}
+        target: 'http://localhost:8080'
+        # optional extras:
+        # cmd_options: '-a -T 1200'   # active scan, 20‑min timeout
+        # fail_action: true           # make workflow fail on alerts ≥ “Medium”
+
+    # ---------------- 4. SCA / SAST / etc. (e.g. Trivy) ----------
+    - name: Trivy vulnerability scan
+      uses: aquasecurity/trivy-action@0.32.0
+      with:
+        scan-type: image
         image-ref: ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }}
-        format: 'table'                        # nice console output; switch to sarif for code‑scanning
-        vuln-type: 'os,library'
-        # severity: 'CRITICAL,HIGH'              # fail only on serious vulns
-        # exit-code: '1'                         # make the job fail if above severities are found
-        # ignore-unfixed: true                   # don’t fail on issues without a published patch
+        format: table
+        vuln-type: os,library
 
-    # ---------- 3. (Optional) Upload a SARIF report to Security tab ----------
-    # - name: Upload Trivy results
-    #   if: always()                            # still upload even if step above fails
-    #   uses: github/codeql-action/upload-sarif@v3
-    #   with:
-    #     sarif_file: trivy-results.sarif
-
+    # ---------------- 5. Always clean up the container -----------
+    - name: Stop web app
+      if: always()                   # run even when previous steps fail
+      run: docker stop web
