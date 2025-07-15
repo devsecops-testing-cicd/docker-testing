@@ -17,6 +17,8 @@ jobs:
         docker build \
           -t ghcr.io/${{ github.repository_owner }}/hello-world-action:${{ github.sha }} \
           ./hello-world-docker-action
+    - name: Say "Hello" with Chainguard
+      uses: ./hello-world-docker-action
 
     # ---------- 2. Scan that image with Trivy ----------
     - name: Trivy vulnerability scan
@@ -37,6 +39,3 @@ jobs:
     #   with:
     #     sarif_file: trivy-results.sarif
 
-    # ---------- 4. Run your action normally ----------
-    - name: Say "Hello" with Chainguard
-      uses: ./hello-world-docker-action
